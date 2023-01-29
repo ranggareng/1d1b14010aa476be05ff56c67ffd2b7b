@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+      - "8088:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:pro
+    volumes_from:
+      - php
+    depends_on:
+      - php
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_PASSWORD: dbpassword
+      POSTGRES_DB: dbtest
+      POSTGRES_USER: dbuser
+  
+  php:
+    image: php:8-fpm
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: php
+    volumes:
+      - ./src:/var/www/html
