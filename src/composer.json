@@ -1,0 +1,11 @@
+{
+    "name": "mocha/src",
+    "autoload": {
+        "psr-4": {
+            "Mocha\\Src\\": "src/"
+        }
+    },
+    "require": {
+        "nepster-web/php-simple-queue": "1.0.0-Alpha-5"
+    }
+}

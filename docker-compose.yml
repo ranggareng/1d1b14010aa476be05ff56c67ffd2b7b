@@ -1,35 +1,41 @@
 version: "3.9"
 services:
-  nginx:
-    image: nginx:stable-alpine
-    container_name: nginx
-    ports:
-      - "8088:80"
-    volumes:
-      - ./src:/var/www/html
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:pro
-    volumes_from:
-      - php
-    depends_on:
-      - php
-      - postgres
-
-  postgres:
-    image: postgres:latest
-    container_name: postgres
-    restart: always
-    ports:
-      - "15432:5432"
-    environment:
-      POSTGRES_PASSWORD: dbpassword
-      POSTGRES_DB: dbtest
-      POSTGRES_USER: dbuser
-  
-  php:
-    image: php:8-fpm
-    build:
+  app:
+    build: 
       context: .
       dockerfile: DockerFile
-    container_name: php
+    container_name: app
+    tty: true
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://dbuser:bigsecret@127.0.0.1:5432/devdb
+    working_dir: /var/www/html
     volumes:
       - ./src:/var/www/html
+
+  webserver:
+    image: nginx:stable
+    container_name: webserver
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    links:
+      - app
+
+  db:
+    image: postgres:12
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: devsecret
+      POSTGRES_USER: devuser
+      POSTGRES_DB: devdb
+    ports:
+      - "54320:5432"
+
