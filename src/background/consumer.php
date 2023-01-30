@@ -5,8 +5,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-include_once './api/Database.php';
-include_once './api/authentication.php';
+include_once __DIR__.'/../api/Database.php';
+include_once __DIR__.'/../api/authentication.php';
 include __DIR__ . '/../vendor/autoload.php';
 
 $connection = \Doctrine\DBAL\DriverManager::getConnection([
@@ -19,6 +19,9 @@ $connection = \Doctrine\DBAL\DriverManager::getConnection([
 ]);
 
 $transport = new \Simple\Queue\Transport\DoctrineDbalTransport($connection);
+
+// create table for queue messages
+$transport->init();
 
 $producer = new \Simple\Queue\Producer($transport);
 $consumer = new \Simple\Queue\Consumer($transport, $producer);
@@ -53,19 +56,20 @@ while (true) {
         
             //Content
             $mail->isHTML(true);                                  //Set email format to HTML
-            $mail->Subject = 'Here is the subject';
+            $mail->Subject = 'Email Sender';
             $mail->Body    = 'This is the HTML message body <b>in bold!</b>';
             $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
         
-            $mail->send();
-            
-            $pdoCon = (new Database)->connect();
-            $datetime = date('Y-m-d H:i:s');
-            $query = $this->conn->prepare("INSERT INTO access_tokens(user_id,sent_at,content) VALUES(:user,:sent_at,:content)");
-            $query->bindParam(':user', (new Authentication())->getUserId());
-            $query->bindParam(':token', $datetime);
-            $query->bindParam(':content', json_encode($content));
-            $query->execute();
+            if (!$mail->send()) {
+                throw new Exception($mail->ErrorInfo);
+            } else {
+                $pdoCon = (new Database)->connect();
+                $datetime = date('Y-m-d H:i:s');
+                $query = $pdoCon->prepare("INSERT INTO email_sent(user_id,sent_at,content) VALUES('1',:sent_at,:content)");
+                $query->bindParam(':sent_at', $datetime);
+                $query->bindParam(':content', json_encode($content));
+                $query->execute();
+            }
 
         } catch (Exception $e) {
             echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
