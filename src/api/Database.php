@@ -11,13 +11,13 @@ class Database{
 			$conn = new PDO('pgsql:host='.$this->dbHost.';dbname='.$this->dbName, $this->dbUser, $this->dbPass, array(PDO::ATTR_PERSISTENT => true));
 	 
 			if($conn){
-				echo "Konek";
+				return $conn;
 			}else{
-				echo "Koneksi database pgsql dan php GAGAL !";
+				return false;
 				exit();
 			}
 		} catch (PDOException $e) {
-			echo $e->getMessage();
+			return $e->getMessage();
 			exit();
 		}
 	}

@@ -6,6 +6,7 @@
         }
     },
     "require": {
-        "nepster-web/php-simple-queue": "1.0.0-Alpha-5"
+        "nepster-web/php-simple-queue": "1.0.0-Alpha-5",
+        "phpmailer/phpmailer": "^6.7"
     }
 }
